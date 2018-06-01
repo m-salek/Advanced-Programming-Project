@@ -22,12 +22,17 @@ public class Shooter {
 	private Game game;
 	private Gun gun;
 
-	private BufferedImage body_image = null;
-	private BufferedImage head_image = null;
+	private BufferedImage body_image;
+	private BufferedImage head_image;
+	private BufferedImage gun_image;
 	private int body_width;
 	private int body_height;
 	private int head_width;
 	private int head_height;
+	
+	private final URL address_body_image = getClass().getResource("/body.png");
+	private final URL address_head_image = getClass().getResource("/head.png");
+	private final URL address_gun_image = getClass().getResource("/gun1.png");
 
 	private double y;
 	private double x;
@@ -39,22 +44,20 @@ public class Shooter {
 	private int earth;
 	private boolean reachedTheSky = false;
 
-		
 	private int[] keyboard = new int[5];
 	
 	
-	public Shooter(Game game, BufferedImage gun_image, BufferedImage head_image, BufferedImage body_image) {
-		
-		this.game = game;
-		this.gun = new Gun(this ,gun_image);
-		
-		this.head_image = head_image;
-		this.body_image = body_image;
+	public Shooter(Game game) {
+		this.game = game;	
+	}
+	
+	private void initialize() {
+		this.gun = new Gun(this, gun_image);
 		this.body_width = this.body_image.getWidth();
     	this.body_height = this.body_image.getHeight();
     	this.head_width = this.head_image.getWidth();
     	this.head_height = this.head_image.getHeight();
-		        
+    	        
     	x = game.width/2 - body_width/2;
         earth = game.height - (body_height + game.ground);
         y = earth;
@@ -108,10 +111,16 @@ public class Shooter {
 			subtractSpeed = speedLimit;
 		}
 		
-		//System.out.println(maxSpeed - subtractValue);
 		velocity_y = maxJumpSpeed - subtractSpeed;
 	}
 	
+	public void loadImage() throws IOException {
+		head_image = ImageIO.read(address_head_image);
+		body_image = ImageIO.read(address_body_image);
+		gun_image = ImageIO.read(address_gun_image);
+		
+		initialize();
+	}
 	
 	public int getPositionX() {
 		return (int) this.x;
