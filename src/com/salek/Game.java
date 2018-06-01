@@ -22,6 +22,7 @@ public class Game extends JPanel {
 	final int width = 800;
 	final int height = 600;
 	final int ground = 113;
+	final int ceil = 60;
 	
     private long startTime;
     private long gameTime;
@@ -31,16 +32,15 @@ public class Game extends JPanel {
     
     
 	private final URL address_background_image = getClass().getResource("/background2.png");
-	private final URL address_gun_image = getClass().getResource("/gun1.png");
-	private final URL address_body_image = getClass().getResource("/body.png");
-	private final URL address_head_image = getClass().getResource("/head.png");
+
 	
 	private BufferedImage background;
 	private BufferedImage head_image;
 	private BufferedImage body_image;
 	private BufferedImage gun_image;
 	
-	private Shooter shooter;	
+	private Shooter shooter;
+	private Cloud cloud;
 		
 		
 	public Game() {
@@ -59,9 +59,6 @@ public class Game extends JPanel {
 			
 		setFocusable(true);
 		
-		loadImages();
-		this.musicPlay();
-
 	}
 	
 	
@@ -73,20 +70,21 @@ public class Game extends JPanel {
 							RenderingHints.VALUE_ANTIALIAS_ON);
 		
 		g2d.drawImage(background, 0, 0, null);
+		cloud.paint(g2d);
 		shooter.paint(g2d);
 	}
 
 	private void move() {
+		cloud.move();
 		shooter.move();
 	}
 	
 	private void loadImages() {
 		try {
-			
 			background = ImageIO.read(address_background_image);
-			head_image = ImageIO.read(address_head_image);
-			body_image = ImageIO.read(address_body_image);
-			gun_image = ImageIO.read(address_gun_image);
+
+			shooter.loadImage();
+			cloud.loadImage();
 			
 		}catch (Exception e) {
 			System.out.println("Error loading the pics:");
@@ -106,7 +104,15 @@ public class Game extends JPanel {
 	public static void main(String[] args) throws InterruptedException {
 		
 		Game game = new Game();
-		game.shooter = new Shooter(game, game.gun_image, game.head_image, game.body_image);
+		game.shooter = new Shooter(game);
+		game.cloud = new Cloud(game);
+		
+		game.loadImages();
+		game.musicPlay();
+		
+
+		
+		
 		
 		JFrame frame = new JFrame();
 		frame.setSize(game.width, game.height);
@@ -117,15 +123,18 @@ public class Game extends JPanel {
 		frame.add(game);
 		frame.setVisible(true);
 		
-		while (true) {
-			game.startTime = System.nanoTime();
-			game.move();
-			game.repaint();
-			game.gameTime = (int) Math.ceil((double) (System.nanoTime() - game.startTime)/1000000);
-			
-			//Thread.yield();
-			//System.out.println(game.updateTime - game.gameTime);
-			Thread.sleep(game.updateTime - game.gameTime);
+		try { 
+			while (true) {
+				game.startTime = System.nanoTime();
+				game.move();
+				game.repaint();
+				game.gameTime = (int) Math.ceil((double) (System.nanoTime() - game.startTime)/1000000);
+	
+//				System.out.println(game.updateTime - game.gameTime);
+				Thread.sleep(game.updateTime - game.gameTime);
+			}
+		}catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 }
