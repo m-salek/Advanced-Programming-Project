@@ -5,24 +5,22 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.net.URL;
-import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 public class Game extends JPanel {
 
+	public static boolean play = true;
+
 	final int width = 800;
 	final int height = 600;
-	final int ground = 113;
+	final int ground = 100;
 	final int ceil = 60;
+	final int earth = height - ground;
 	
     private long startTime;
     private long gameTime;
@@ -30,17 +28,18 @@ public class Game extends JPanel {
     private final int fps = 60;
     private final int updateTime = (int) (miliSec / fps);
     
-    
-	private final URL address_background_image = getClass().getResource("/background2.png");
+	private final URL address_ground = getClass().getResource("/Ground2.png");
+	private final URL address_sky = getClass().getResource("/Sky1.png");
+	private final URL address_frame = getClass().getResource("/Frame.png");
 
+	private BufferedImage skyImage, groundImage, frameImage;
 	
-	private BufferedImage background;
-	private BufferedImage head_image;
-	private BufferedImage body_image;
-	private BufferedImage gun_image;
-	
-	private Shooter shooter;
+	Shooter shooter;
 	private Cloud cloud;
+	private AirPlane airplane;
+	CenterCollision centerCollision;
+	
+	public static final int deathArea = 1000;
 		
 		
 	public Game() {
@@ -58,39 +57,28 @@ public class Game extends JPanel {
 			});
 			
 		setFocusable(true);
-		
 	}
 	
-	
-	@Override
-	public void paint(Graphics g) {
-		super.paint(g);
-		Graphics2D g2d = (Graphics2D) g;
-		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-							RenderingHints.VALUE_ANTIALIAS_ON);
-		
-		g2d.drawImage(background, 0, 0, null);
-		cloud.paint(g2d);
-		shooter.paint(g2d);
-	}
-
-	private void move() {
-		cloud.move();
-		shooter.move();
-	}
-	
-	private void loadImages() {
+	private void loadContent() {
 		try {
-			background = ImageIO.read(address_background_image);
-
+			skyImage = ImageIO.read(address_sky);
+			groundImage = ImageIO.read(address_ground);
+			frameImage = ImageIO.read(address_frame);
+			Sound.loadSound();
 			shooter.loadImage();
 			cloud.loadImage();
-			
+			airplane.loadImage();
 		}catch (Exception e) {
-			System.out.println("Error loading the pics:");
+			System.out.println("Error Loading Content:");
 			System.out.println(e);
 			System.exit(0);
 		}
+	}
+	
+	private void action() {
+		airplane.action();
+		cloud.action();
+		shooter.action();
 	}
 	
 	private void musicPlay() {
@@ -101,18 +89,31 @@ public class Game extends JPanel {
 		}
 	}
 	
+	@Override
+	public void paint(Graphics g) {
+		super.paint(g);
+		Graphics2D g2d = (Graphics2D) g;
+		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+							RenderingHints.VALUE_ANTIALIAS_ON);
+		
+		g2d.drawImage(skyImage, 0, 0, null);
+		g2d.drawImage(groundImage, 0, earth, null);
+		airplane.paint(g2d);
+		cloud.paint(g2d);
+		shooter.paint(g2d);
+		g2d.drawImage(frameImage, 0, 0, null);
+	}
+
 	public static void main(String[] args) throws InterruptedException {
 		
 		Game game = new Game();
 		game.shooter = new Shooter(game);
 		game.cloud = new Cloud(game);
+		game.airplane = new AirPlane(game);
+		game.centerCollision = new CenterCollision(game, game.shooter);
 		
-		game.loadImages();
+		game.loadContent();
 		game.musicPlay();
-		
-
-		
-		
 		
 		JFrame frame = new JFrame();
 		frame.setSize(game.width, game.height);
@@ -124,9 +125,9 @@ public class Game extends JPanel {
 		frame.setVisible(true);
 		
 		try { 
-			while (true) {
-				game.startTime = System.nanoTime();
-				game.move();
+			while(play) {
+				game.startTime = System.nanoTime();				
+				game.action();
 				game.repaint();
 				game.gameTime = (int) Math.ceil((double) (System.nanoTime() - game.startTime)/1000000);
 	
@@ -134,7 +135,7 @@ public class Game extends JPanel {
 				Thread.sleep(game.updateTime - game.gameTime);
 			}
 		}catch (Exception e) {
-			e.printStackTrace();
+			System.out.println(e);
 		}
 	}
 }

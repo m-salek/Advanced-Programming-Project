@@ -11,14 +11,14 @@ import javax.imageio.ImageIO;
 public class Cloud {
 	
 	private Game game;
-	
+		
 	private Random r = new Random();
 	
 	private int leftBorder;
 	private int rightBorder;
-	private double speed = 0.7;
-	private double speedMin = 0.2;
-	private double speedMax = 0.5;
+	private double speed = 0.2;
+	private double speedMin = 0.1;
+	private double speedMax = 0.2;
 	private int number_of_cloud = 6;
 	private BufferedImage[] images = new BufferedImage[number_of_cloud];
 	private BufferedImage[] images_clone = new BufferedImage[number_of_cloud];
@@ -60,7 +60,7 @@ public class Cloud {
 		images_clone = images.clone();
 	}
 	
-	public void move() {
+	public void action() {
 		for(int i = 0; i < number_of_cloud; i++) {
 			position[i][0] -= velocity[i];
 			if(position[i][0] < leftBorder) {
