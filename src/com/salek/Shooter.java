@@ -3,30 +3,20 @@ package com.salek;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.net.URL;
-import javax.imageio.ImageIO;
-
 
 public class Shooter {
 
 	private Game game;
+	static Gun gun_static;
 	private Gun gun;
 
-	private BufferedImage body_image;
-	private BufferedImage head_image;
-	BufferedImage gun_image, gun_image2;
+	BufferedImage body_image, head_image;
 	
 	private int body_width;
 	private int body_height;
 	private int head_width;
 	private int head_height;
 	private int earth;
-	
-	private final URL address_body_image = getClass().getResource("/body.png");
-	private final URL address_head_image = getClass().getResource("/head.png");
-	private final URL address_gun_image = getClass().getResource("/gun1.png");
-	private final URL address_gun_image2 = getClass().getResource("/gun1_2.png");
 
 	private double y;
 	private double x;
@@ -40,53 +30,48 @@ public class Shooter {
 	private final double desiredFallingSlowness = 1.5;
 	private boolean reachedTheSky = false;
 	private boolean right_to_left;
-	
-	private boolean canShootStatus;
+	private boolean jumping;
 	
 	private boolean[] keyboard = new boolean[10];
 	
 	
 	public Shooter(Game game) {
 		this.game = game;
+		body_image = Image.body_image;
+		head_image = Image.head_image;
+
+		initializeMainGuy();
 	}
 	
 	private void initializeMainGuy() {
 		right_to_left = false;
-		this.gun = new Gun(game, gun_image, right_to_left);
 		this.body_width = this.body_image.getWidth();
     	this.body_height = this.body_image.getHeight();
     	this.head_width = this.head_image.getWidth();
     	this.head_height = this.head_image.getHeight();
     	
-    	x = game.width/2 - body_width/2;
-        earth = game.height - (body_height + game.ground);
+    	x = game.WIDTH/2 - body_width/2;
+        earth = game.EARTH - body_height;
         y = earth;
         head_X = x + (body_width-head_width)/2;
         head_Y = y - head_height;
-        canShootStatus = true;
 	}
 	
-	public void loadImage() throws IOException {
-		head_image = ImageIO.read(address_head_image);
-		body_image = ImageIO.read(address_body_image);
-		gun_image = ImageIO.read(address_gun_image);
-		gun_image2 = ImageIO.read(address_gun_image2);
-		
-		initializeMainGuy();
-	}
 	
 	private void turnSide() {
-		if(right_to_left == true) {
-			gun.turn(true);
-		}else {
-			gun.turn(false);
+		if(this.gun != null) {
+			if(right_to_left == true) {
+				gun.turn(true);
+			}else {
+				gun.turn(false);
+			}
 		}
 	}
 	
 	public void action() {
-		
+		if(gun == null) gun = gun_static;
 		keyboardCheker();
-		if ((x + velocity_x > 0) && (x + velocity_x < (game.width - body_width))) {	
+		if ((x + velocity_x > 0) && (x + velocity_x < (game.WIDTH - body_width))) {	
 			if(velocity_x < 0) right_to_left = true;
 			else if(velocity_x > 0) right_to_left = false;
 			turnSide();
@@ -109,6 +94,7 @@ public class Shooter {
 				y = earth;
 				reachedTheSky = false;
 				velocity_y = 0;
+				jumping = false;
 			}
 		}
 		head_X = x + (body_width-head_width)/2;
@@ -137,22 +123,23 @@ public class Shooter {
 	private void keyboardCheker() {
 		if(keyboard[0] == true) velocity_x = -1 * runSpeed;
 		if(keyboard[1] == true) velocity_x = runSpeed;
-		if(keyboard[2] == true) velocity_y = 1;
-		
+		if(keyboard[2] == true) {
+			jumping = true;
+			velocity_y = 1;
+		}
 		if((keyboard[0] == false) && (keyboard[1] == false)) velocity_x = 0;
-		
 		if(keyboard[9] == true) System.exit(0);
 	}
 	
 	public void paint(Graphics2D g2d) {
 		g2d.drawImage(body_image,(int) x,(int) y, null);
 		g2d.drawImage(head_image,(int) head_X,(int) head_Y, null);
-		this.gun.paint(g2d);
+		if(this.gun != null) this.gun.paint(g2d);
 	}
 
 	
 	public void keyPressed(KeyEvent e) {
-		gun.keyPressed(e);
+		if(this.gun != null) gun.keyPressed(e);
 		
 		if (e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_A) {
 			keyboard[0] = true;
@@ -169,7 +156,7 @@ public class Shooter {
 		
 	}
 	public void keyReleased(KeyEvent e) {
-		gun.keyReleased(e);
+		if(this.gun != null) gun.keyReleased(e);
 		
 		if (e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_A) {
 			keyboard[0] = false;
@@ -208,17 +195,18 @@ public class Shooter {
 	public int getHeadHeight() {
 		return this.head_height;
 	}
-	public int getGunX(boolean right_to_left) {
+	public int getGunX(boolean right_to_left, Gun gun) {
 		if(right_to_left == false) {
-			return getPositionX() + getBodyWidth()/2 + 8; //TODO: Standardize this beautiful
+			return getPositionX() + getBodyWidth()/2 + gun.getGunWidth()/2; //TODO: Standardize this beautiful
 		}else {
-			return getPositionX() - getBodyWidth()/2 + 3; //TODO: Standardize this beautiful too
+			return getPositionX() - gun.getGunWidth()/2 - 6; //TODO: Standardize this beautiful too
 		}
 	}
 	public int getGunY() {
 		return getPositionY() + getBodyHeight()/2 - 8; //TODO: Standardize this beautiful also
 	}
-	public boolean getCanShootStatus() {
-		return canShootStatus;
+	public boolean isJumping() {
+		return jumping;
 	}
+
 }

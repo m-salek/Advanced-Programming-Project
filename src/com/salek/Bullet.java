@@ -14,13 +14,13 @@ public class Bullet {
 	double speed = 8;
 	boolean right_to_left;
 	private final int bulletDeathArea = Game.deathArea; 
-	
-	private int bulletStatus; 
-	
-	public Bullet(Game game, Gun gun, boolean right_to_left, double gunX, double gunY, double destinyX, double destinyY) {
+	private boolean isDead = false; 
+		
+	public Bullet(Game game, Gun gun, boolean right_to_left, double destinyX, double destinyY) {
 		this.game = game;
 		this.gunWidth = gun.getGunWidth();
-		this.x = game.shooter.getGunX(right_to_left);
+		if(!right_to_left) this.x = game.shooter.getGunX(right_to_left, gun);
+		else this.x = game.shooter.getGunX(right_to_left, gun);
 		this.y = game.shooter.getGunY();
 		this.destination_x = destinyX;
 		this.destination_y = destinyY;
@@ -28,30 +28,45 @@ public class Bullet {
 			this.right_to_left = true;
 		}else {
 			this.right_to_left = false;
-			//fixes self shot:
-			this.x += this.gunWidth;
+			this.x += this.gunWidth; //fixes self shot
 		}
+	}
+	
+	public void kill() {
+		isDead = true;
+		x = bulletDeathArea;
+		y = bulletDeathArea;
 	}
 	
 	private void shotFired(){
 		//TODO: do sth with bulletStatus
-		bulletStatus = game.centerCollision.doesBulletCollideWithShooter(this);
-		if(bulletStatus != 0) {
-			//TODO:
-			System.out.println(bulletStatus);
-			x = bulletDeathArea;
-			y = bulletDeathArea;
-		}
-		if(right_to_left == false && x < destination_x) {
-			x += speed;
-		}else if(right_to_left == true && x > destination_x) {
-			x -= speed;
+		game.centerCollision.bulletCollidingWithShooter(this);
+		if(!isDead) {
+			if(right_to_left == false && x < destination_x) {
+				x += speed;
+			}else if(right_to_left == true && x > destination_x) {
+				x -= speed;
+			}else {
+				kill();
+			}
 		}
 	}
 	
 	public void paint(Graphics2D g2d) {
-		g2d.fillOval((int) x,(int) y,(int) width,(int) height);
-		shotFired();
+		if(!isDead) {
+			g2d.fillOval((int) x,(int) y,(int) width,(int) height);
+			shotFired();
+		}
+	}
+	
+	public int getX() {
+		return (int) this.x;
+	}
+	public int getY() {
+		return (int) this.y;
+	}
+	public boolean isBulletDead() {
+		return isDead;
 	}
 }
 
